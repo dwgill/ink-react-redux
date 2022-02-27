@@ -1,0 +1,3 @@
+[submodule "inkjs"]
+	path = inkjs
+	url = git@github.com:y-lohse/inkjs.git

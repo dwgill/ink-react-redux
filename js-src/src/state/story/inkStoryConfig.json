@@ -1,0 +1,25 @@
+{
+  "trackedVariables": {
+    "bool": [
+      "teacup",
+      "gotcomponent",
+      "drugged",
+      "hooper_mentioned",
+      "losttemper",
+      "admitblackmail",
+      "hooperConfessed",
+      "notraitor",
+      "revealedhooperasculprit",
+      "smashedglass",
+      "muddyshoes",
+      "framedhooper",
+      "putcomponentintent",
+      "throwncomponentaway",
+      "piecereturned",
+      "longgrasshooperframe",
+      "DEBUG"
+    ],
+    "int": ["forceful", "evasive", "hooperClueType", "smashingWindowItem"],
+    "float": []
+  }
+}
