@@ -28,4 +28,4 @@ export const getStore = () => {
 
 export type Store = typeof store;
 export type Dispatch = Store["dispatch"];
-export type ReduxState = ReturnType<Store["getState"]>;
+export type ReduxState = ReturnType<typeof reducer>;
