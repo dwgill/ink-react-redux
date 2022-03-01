@@ -14,6 +14,9 @@ const miscSlice = createSlice({
   name: "story/misc",
   reducers: {
     setErrors(state, action: PayloadAction<string[]>) {
+      if (state.errors.length === 0 && action.payload.length === 0) {
+        return;
+      }
       state.errors = [...action.payload];
     },
     setCanContinue(state, action: PayloadAction<boolean>) {
