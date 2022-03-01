@@ -7,7 +7,7 @@ import choicesSlice from './choices';
 const storyReducer = combineReducers({
     lines: linesSlice.reducer, 
     variables: variablesSlice.reducer,
-    errors: miscSlice.reducer,
+    misc: miscSlice.reducer,
     choices: choicesSlice.reducer,
 });
 
