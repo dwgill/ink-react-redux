@@ -9,7 +9,7 @@ const createStore = () =>
   configureStore({
     reducer,
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().prepend(storyReduxMiddleware.middleware),
+      getDefaultMiddleware().concat(storyReduxMiddleware.middleware),
   });
 
 let store: ReturnType<typeof createStore>;

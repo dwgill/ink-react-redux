@@ -18,14 +18,16 @@ export interface BasicLine {
   readonly index: number;
   readonly tags: string[];
   readonly text: string;
+  readonly endBreak: boolean;
+  readonly startBreak: boolean;
   readonly meta: Record<string, any>;
 }
 
 export type Line = BasicLine;
 
 // When inserting a new line, the `index` must not be present & the `meta` is optional.
-type NewLineValue = Omit<Line, "index" | "meta" | "tags"> &
-  Partial<Pick<Line, "meta" | "tags">>;
+type NewLineValue = Omit<Line, "index" | "meta" | "tags" | 'endBreak' | 'startBreak'> &
+  Partial<Pick<Line, "meta" | "tags"| 'endBreak' | 'startBreak'>>;
 
 const linesCollectionAdapter = createEntityAdapter<Line>({
   selectId: (line) => line.id,
@@ -33,6 +35,9 @@ const linesCollectionAdapter = createEntityAdapter<Line>({
 });
 
 export const nonGlobalLinesSelectors = linesCollectionAdapter.getSelectors();
+
+const startBreakRE = /^\s*\n/;
+const endBreakRE = /\n\s*$/
 
 const linesSlice = createSlice({
   name: "story/lines",
@@ -43,9 +48,12 @@ const linesSlice = createSlice({
         if (newLine == null) return;
         linesCollectionAdapter.addOne(state, {
           ...newLine,
+          text: newLine.text.trim(),
           index: nonGlobalLinesSelectors.selectTotal(state),
           meta: newLine.meta == null ? {} : newLine.meta,
           tags: newLine.tags == null ? [] : newLine.tags,
+          startBreak: newLine.startBreak ?? (startBreakRE.test(newLine.text)),
+          endBreak: newLine.endBreak ?? (endBreakRE.test(newLine.text))
         });
       },
       prepare(

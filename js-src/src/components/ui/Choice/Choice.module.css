@@ -1,0 +1,8 @@
+.item {
+    list-style: none;
+}
+
+.btn {
+    composes: button from global;
+    composes: none from global;
+}

@@ -1,11 +1,13 @@
+import { ListenerEffectAPI } from "@reduxjs/toolkit";
 import type { Story } from "inkjs";
 import storyConfig from "../story/inkStoryConfig.json";
-import { continueStory } from "./actions/storyActions";
+import { continueStory, selectChoice } from "./actions/storyActions";
+import { getChoice, getLineByIndex } from "./selectors/story";
 import choicesSlice from "./slices/story/choices";
 import linesSlice, { lineKinds } from "./slices/story/lines";
 import miscSlice from "./slices/story/misc";
 import variablesSlice from "./slices/story/variables";
-import type { Store } from "./store";
+import type { Dispatch, ReduxState, Store } from "./store";
 import storyReduxMiddleware from "./storyReduxMiddleware";
 
 function addVariableObservers(story: InstanceType<typeof Story>, store: Store) {
@@ -44,7 +46,32 @@ function startStoryReduxMiddlewareListening(
   story: InstanceType<typeof Story>,
   store: Store
 ) {
-  const stopListening = storyReduxMiddleware.startListening({
+  function handleStoryStep(
+    listenerApi: ListenerEffectAPI<ReduxState, Dispatch>
+  ) {
+    const canContinue = story.canContinue;
+    const currentText = story.currentText;
+    const currentTags = story.currentTags;
+    const currentErrors = story.currentErrors;
+    const currentChoices = story.currentChoices;
+
+    if (currentText || currentTags?.length) {
+      listenerApi.dispatch(
+        linesSlice.actions.addLine({
+          lineKind: lineKinds.BASIC_LINE,
+          text: currentText ?? "",
+          tags: [...(currentTags ?? [])],
+        })
+      );
+    }
+
+    listenerApi.dispatch(miscSlice.actions.setErrors(currentErrors ?? []));
+    listenerApi.dispatch(miscSlice.actions.setCanContinue(canContinue));
+    listenerApi.dispatch(choicesSlice.actions.replaceChoices(currentChoices));
+    return { canContinue };
+  }
+
+  const stopListeningContinue = storyReduxMiddleware.startListening({
     actionCreator: continueStory,
     effect({ payload: { maximally } }, listenerApi) {
       let canContinue = story.canContinue;
@@ -57,28 +84,9 @@ function startStoryReduxMiddlewareListening(
       }
 
       while (canContinue) {
-        const currentText = story.Continue();
-        canContinue = story.canContinue;
-        const currentTags = story.currentTags;
-        const currentErrors = story.currentErrors;
-        const currentChoices = story.currentChoices;
-
-        if (currentText || currentTags?.length) {
-          listenerApi.dispatch(
-            linesSlice.actions.addLine({
-              lineKind: lineKinds.BASIC_LINE,
-              text: currentText ?? "",
-              tags: [...(currentTags ?? [])],
-            })
-          );
-        }
-
-        listenerApi.dispatch(miscSlice.actions.setErrors(currentErrors ?? []));
-        listenerApi.dispatch(miscSlice.actions.setCanContinue(canContinue));
-        listenerApi.dispatch(
-          choicesSlice.actions.replaceChoices(currentChoices)
-        );
-
+        story.Continue();
+        const output = handleStoryStep(listenerApi);
+        canContinue = output.canContinue;
         if (!maximally) {
           return;
         }
@@ -86,8 +94,37 @@ function startStoryReduxMiddlewareListening(
     },
   });
 
+  const stopListeningSelectChoice = storyReduxMiddleware.startListening({
+    actionCreator: selectChoice,
+    effect({ payload: { choiceId, maximally } }, listenerApi) {
+      const choice = getChoice(listenerApi.getState(), choiceId);
+      if (choice == null) {
+        if (process.env.NODE_ENV === "development") {
+          alert(`Tried to select non-existant choice ${choiceId}.`);
+        }
+        return;
+      }
+
+      // The "real" previous line is going to be replaced by this text
+      const prevLine = getLineByIndex(listenerApi.getState(), -2);
+      if (prevLine && !prevLine.endBreak) {
+        listenerApi.dispatch(
+          linesSlice.actions.addLine({
+            lineKind: lineKinds.BASIC_LINE,
+            text: "",
+            endBreak: true,
+            startBreak: true,
+          })
+        );
+      }
+      story.ChooseChoiceIndex(choice.index);
+      listenerApi.dispatch(continueStory({ maximally }));
+    },
+  });
+
   return function stopStoryReduxMiddlewareListening() {
-    stopListening();
+    stopListeningContinue();
+    stopListeningSelectChoice();
   };
 }
 
