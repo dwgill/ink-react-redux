@@ -1,4 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { TypedUseSelectorHook, useSelector as useSelectorUntyped } from "react-redux";
 import { getStory } from "../story/core";
 import reducer from "./reducer";
 import { connectStoryToReduxStore } from "./storyReduxConnection";
@@ -29,3 +30,4 @@ export const getStore = () => {
 export type Store = typeof store;
 export type Dispatch = Store["dispatch"];
 export type ReduxState = ReturnType<typeof reducer>;
+export const useSelector: TypedUseSelectorHook<ReduxState> = useSelectorUntyped;

@@ -21,7 +21,7 @@ export interface BasicLine {
   readonly meta: Record<string, any>;
 }
 
-type Line = BasicLine;
+export type Line = BasicLine;
 
 // When inserting a new line, the `index` must not be present & the `meta` is optional.
 type NewLineValue = Omit<Line, "index" | "meta" | "tags"> &
