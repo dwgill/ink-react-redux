@@ -1,16 +1,20 @@
 import {
   createEntityAdapter,
   createSlice,
+  nanoid,
   PayloadAction,
-  current,
 } from "@reduxjs/toolkit";
 import type { ReduxState } from "../../store";
 
 const BASIC_LINE = "c/story/line/basicLine";
 
+export const lineKinds = {
+  BASIC_LINE,
+} as const;
+
 export interface BasicLine {
-  readonly lineKind: typeof BASIC_LINE;
   readonly id: string;
+  readonly lineKind: typeof BASIC_LINE;
   readonly index: number;
   readonly tags: string[];
   readonly text: string;
@@ -30,19 +34,35 @@ const linesCollectionAdapter = createEntityAdapter<Line>({
 
 export const nonGlobalLinesSelectors = linesCollectionAdapter.getSelectors();
 
-// TODO: add tests around this
 const linesSlice = createSlice({
   name: "story/lines",
   initialState: linesCollectionAdapter.getInitialState(),
   reducers: {
-    addLine(state, { payload: newLine }: PayloadAction<NewLineValue>) {
-      if (newLine == null) return;
-      linesCollectionAdapter.addOne(state, {
-        ...newLine,
-        index: nonGlobalLinesSelectors.selectTotal(state),
-        meta: newLine.meta == null ? {} : newLine.meta,
-        tags: newLine.tags == null ? [] : newLine.tags,
-      });
+    addLine: {
+      reducer(state, { payload: newLine }: PayloadAction<NewLineValue>) {
+        if (newLine == null) return;
+        linesCollectionAdapter.addOne(state, {
+          ...newLine,
+          index: nonGlobalLinesSelectors.selectTotal(state),
+          meta: newLine.meta == null ? {} : newLine.meta,
+          tags: newLine.tags == null ? [] : newLine.tags,
+        });
+      },
+      prepare(
+        newLine: Omit<NewLineValue, "id"> & Partial<Pick<NewLineValue, "id">>
+      ) {
+        if (newLine == null) {
+          return {
+            payload: null as any,
+          };
+        }
+        return {
+          payload: {
+            ...newLine,
+            id: newLine.id ?? nanoid(),
+          },
+        };
+      },
     },
     setLineMetadata(
       state,
