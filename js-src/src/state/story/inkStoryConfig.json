@@ -23,5 +23,5 @@
     "int": ["forceful", "evasive", "hooperClueType", "smashingWindowItem"],
     "float": []
   },
-  "persistChoiceText": true
+  "persistChoiceText": false
 }

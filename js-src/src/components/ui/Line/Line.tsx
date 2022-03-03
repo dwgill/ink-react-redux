@@ -19,7 +19,7 @@ export default function Line({ lineData, outsideParagraph }: LineProps) {
     );
   }
   return (
-    <span id={lineData.id} style={{ display: "inline" }}>
+    <span id={lineData.id}>
       {lineData.text}
     </span>
   );

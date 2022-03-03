@@ -3,16 +3,16 @@ import React, { memo } from "react";
 import { getChoice, getChoiceIds } from "../../../state/redux/selectors/story";
 import { useSelector } from "../../../state/redux/store";
 import Choice from "../../ui/Choice";
-import NarrativeChoicesContainer from "../../ui/NarrativeChoicesContainer";
+import ChoicesBox from "../../ui/ChoicesBox";
 
 export default function NarrativeChoices() {
   const choiceIds = useSelector(getChoiceIds);
   return (
-    <NarrativeChoicesContainer>
+    <ChoicesBox>
       {choiceIds.map((choiceId) => (
         <ChoiceWrapper key={choiceId} choiceId={choiceId} />
       ))}
-    </NarrativeChoicesContainer>
+    </ChoicesBox>
   );
 }
 
