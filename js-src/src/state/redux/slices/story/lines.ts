@@ -51,7 +51,7 @@ type NewTextualLineValue = SomeOmitSomePartial<
 type NewEmptyLineValue = SomeOmitSomePartial<
   EmptyLine,
   "index",
-  "meta" | "tags" | 'breakLevel'
+  "meta" | "tags" | "breakLevel"
 >;
 
 export const newBasicLineBreak = (): NewEmptyLineValue => ({
@@ -150,6 +150,14 @@ const linesSlice = createSlice({
             continue;
           }
 
+          if (
+            lastLineIsWhiteSpace &&
+            lineIsMinimalWhitespace(lastLine) &&
+            newCompleteLine.lineKind === LineKind.Empty &&
+            newCompleteLine.breakLevel === LineBreakLevel.ChoiceSelection
+          ) {
+            linesCollectionAdapter.removeOne(state, lastLine.id);
+          }
           linesCollectionAdapter.addOne(state, newCompleteLine);
         }
       },

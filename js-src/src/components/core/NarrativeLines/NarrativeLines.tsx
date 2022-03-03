@@ -4,6 +4,7 @@ import React, {
   memo,
   ReactNode,
   useContext,
+  useEffect,
   useLayoutEffect,
 } from "react";
 import { getLine, getLineIds } from "../../../state/redux/selectors/story";
@@ -12,6 +13,7 @@ import {
   LineKind,
 } from "../../../state/redux/slices/story/lines";
 import { useSelector } from "../../../state/redux/store";
+import arraysAreShallowEqual from "../../../util/arraysAreShallowEqual";
 import splitArray from "../../../util/splitArray";
 import Line from "../../ui/Line";
 import LinesBox from "../../ui/LinesBox";
@@ -49,28 +51,23 @@ export default memo(function NarrativeLines() {
       <paragraphRegistryContext.Provider value={pRegistry}>
         {linesByParagraph.map((paragraphOfLineIds, pIndex) => {
           const isFirstParagraph = pIndex === 0;
-          const [firstLineId, ...lineIds] = paragraphOfLineIds;
-          const firstLineIdOfParagraph = isFirstParagraph
-            ? firstLineId
-            : lineIds[0];
           return (
             <React.Fragment key={paragraphOfLineIds[0]}>
               {!isFirstParagraph && (
                 <LineWrapper
-                  key={firstLineId}
-                  lineId={firstLineId}
+                  key={paragraphOfLineIds[0]}
+                  lineId={paragraphOfLineIds[0]}
                   outsideParagraph
                 />
               )}
               {(isFirstParagraph || !!lineIds.length) && (
-                <ParagraphWrapper firstLineId={firstLineIdOfParagraph}>
-                  {isFirstParagraph && (
-                    <LineWrapper key={firstLineId} lineId={firstLineId} />
-                  )}
-                  {lineIds.map((lineId) => (
-                    <LineWrapper key={lineId} lineId={lineId} />
-                  ))}
-                </ParagraphWrapper>
+                <ParagraphWrapper
+                  lineIds={
+                    isFirstParagraph
+                      ? paragraphOfLineIds
+                      : paragraphOfLineIds.slice(1)
+                  }
+                />
               )}
             </React.Fragment>
           );
@@ -108,7 +105,7 @@ interface NewParagraphProps {
 }
 function NewParagraph({ index }: NewParagraphProps) {
   const registry = useContext(paragraphRegistryContext);
-  useLayoutEffect(() => {
+  useEffect(() => {
     registry.register(index);
     return () => {
       registry.unregister(index);
@@ -119,13 +116,24 @@ function NewParagraph({ index }: NewParagraphProps) {
 }
 
 interface ParagraphWrapperProps {
-  firstLineId: EntityId;
-  children: ReactNode;
+  lineIds: EntityId[];
 }
-const ParagraphWrapper = memo(function ParagraphWrapper({
-  firstLineId,
-  children,
-}: ParagraphWrapperProps) {
-  const line = useSelector((state) => getLine(state, firstLineId));
-  return <Paragraph firstLine={line ?? null}>{children}</Paragraph>;
-});
+const ParagraphWrapper = memo(
+  function ParagraphWrapper({ lineIds }: ParagraphWrapperProps) {
+    const firstLine = useSelector((state) => getLine(state, lineIds[0]));
+    if (!lineIds.length) {
+      return null;
+    }
+
+    return (
+      <Paragraph firstLine={firstLine ?? null}>
+        {lineIds.map((lineId) => (
+          <LineWrapper key={lineId} lineId={lineId} />
+        ))}
+      </Paragraph>
+    );
+  },
+  (prevProps, nextProps) => {
+    return arraysAreShallowEqual(prevProps.lineIds, nextProps.lineIds);
+  }
+);
