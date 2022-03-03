@@ -1,5 +1,5 @@
 import produce from 'immer';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useMemo, useState } from "react";
 
 type ParagraphIndexMap = Record<number, number>;
 
@@ -29,7 +29,7 @@ export function useParagraphIndexMap() {
       produce((pMap) => {
         if (pMap[lineIndex] == null) return;
         pMap[lineIndex] -= 1;
-        if (pMap[lineIndex] === 0) {
+        if (pMap[lineIndex] <= 0) {
           delete pMap[lineIndex];
         }
       })

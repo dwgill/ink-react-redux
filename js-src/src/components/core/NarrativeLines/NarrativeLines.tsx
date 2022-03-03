@@ -1,5 +1,5 @@
 import { EntityId } from "@reduxjs/toolkit";
-import React, { memo } from "react";
+import React, { memo, useContext, useLayoutEffect } from "react";
 import { getLine, getLineIds } from "../../../state/redux/selectors/story";
 import {
   LineBreakLevel,
@@ -10,11 +10,10 @@ import splitArray from "../../../util/splitArray";
 import Line from "../../ui/Line";
 import NarrativeLinesContainer from "../../ui/NarrativeLinesContainer";
 import NarrativeLinesParagraphContainer from "../../ui/NarrativeLinesParagraphContainer";
-import NewParagraph from "../NewParagraph";
 import {
   paragraphRegistryContext,
   useParagraphIndexMap,
-} from "../NewParagraph/paragraphRegistry";
+} from "./paragraphRegistry";
 
 export default memo(function NarrativeLines() {
   const lineIds = useSelector(getLineIds);
@@ -94,3 +93,18 @@ const LineWrapper = memo(function LineWrapper({
     </>
   );
 });
+
+interface NewParagraphProps {
+  index: number;
+}
+function NewParagraph({ index }: NewParagraphProps) {
+  const registry = useContext(paragraphRegistryContext);
+  useLayoutEffect(() => {
+    registry.register(index);
+    return () => {
+      registry.unregister(index);
+    };
+  }, [registry, index]);
+
+  return null;
+}
