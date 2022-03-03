@@ -2,9 +2,9 @@ import { ListenerEffectAPI } from "@reduxjs/toolkit";
 import type { Story } from "inkjs";
 import storyConfig from "../story/inkStoryConfig.json";
 import { continueStory, selectChoice } from "./actions/storyActions";
-import { getChoice, getLineByIndex } from "./selectors/story";
+import { getChoice } from "./selectors/story";
 import choicesSlice from "./slices/story/choices";
-import linesSlice, { lineKinds } from "./slices/story/lines";
+import linesSlice, { LineBreakLevel, LineKind } from "./slices/story/lines";
 import miscSlice from "./slices/story/misc";
 import variablesSlice from "./slices/story/variables";
 import type { Dispatch, ReduxState, Store } from "./store";
@@ -55,10 +55,10 @@ function startStoryReduxMiddlewareListening(
     const currentErrors = story.currentErrors;
     const currentChoices = story.currentChoices;
 
-    if (currentText || currentTags?.length) {
+    if (currentText?.trim() || currentTags?.length) {
       listenerApi.dispatch(
         linesSlice.actions.addLine({
-          lineKind: lineKinds.BASIC_LINE,
+          lineKind: LineKind.Text,
           text: currentText ?? "",
           tags: [...(currentTags ?? [])],
         })
@@ -105,19 +105,22 @@ function startStoryReduxMiddlewareListening(
         return;
       }
 
-      // The "real" previous line is going to be replaced by this text
-      const prevLine = getLineByIndex(listenerApi.getState(), -2);
-      if (prevLine && !prevLine.endBreak) {
+      story.ChooseChoiceIndex(choice.index);
+      if (storyConfig?.persistChoiceText && !choice.isInvisibleDefault) {
         listenerApi.dispatch(
           linesSlice.actions.addLine({
-            lineKind: lineKinds.BASIC_LINE,
-            text: "",
-            endBreak: true,
-            startBreak: true,
+            lineKind: LineKind.Text,
+            text: choice.text,
+            persistedChoice: true,
           })
         );
       }
-      story.ChooseChoiceIndex(choice.index);
+      listenerApi.dispatch(
+        linesSlice.actions.addLine({
+          lineKind: LineKind.Empty,
+          breakLevel: LineBreakLevel.ChoiceSelection,
+        })
+      );
       listenerApi.dispatch(continueStory({ maximally }));
     },
   });

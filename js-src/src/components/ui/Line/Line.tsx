@@ -1,17 +1,26 @@
 import React from "react";
-import { Line as LineData } from "../../../state/redux/slices/story/lines";
+import {
+  Line as LineData,
+  LineBreakLevel,
+  LineKind
+} from "../../../state/redux/slices/story/lines";
 
 interface LineProps {
   lineData: LineData;
+  outsideParagraph: boolean;
 }
-export default function Line({ lineData }: LineProps) {
+export default function Line({ lineData, outsideParagraph }: LineProps) {
+  if (lineData.lineKind === LineKind.Empty) {
+    return (
+      <>
+        {outsideParagraph &&
+          lineData.breakLevel === LineBreakLevel.ChoiceSelection && <hr />}
+      </>
+    );
+  }
   return (
-    <>
-      {lineData.startBreak && <br />}
-      <span id={lineData.id} style={{ display: "inline" }}>
-        {lineData.text}
-      </span>
-      {lineData.endBreak && <br />}
-    </>
+    <span id={lineData.id} style={{ display: "inline" }}>
+      {lineData.text}
+    </span>
   );
 }

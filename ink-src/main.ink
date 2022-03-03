@@ -78,7 +78,7 @@ VAR DEBUG = false
 		*	Hut 14[]. The door was locked after I sat down. 
 		I don't even have a pen to do any work. There's a copy of the morning's intercept in my pocket, but staring at the jumbled letters will only drive me mad. 
 		I am not a machine, whatever they say about me.
-
+# tag1 # tag2
 	- (opts)
 		{|I rattle my fingers on the field table.|}
  		* 	(think) [Think] 

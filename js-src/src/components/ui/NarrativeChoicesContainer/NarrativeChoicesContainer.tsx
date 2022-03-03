@@ -6,5 +6,5 @@ interface NarrativeChoicesContainerProps {
 export default function NarrativeChoicesContainer({
   children,
 }: NarrativeChoicesContainerProps) {
-  return <ul>{children}</ul>;
+  return <menu>{children}</menu>;
 }

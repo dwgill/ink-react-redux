@@ -1,4 +1,4 @@
-import linesSlice, { nonGlobalLinesSelectors } from "./lines";
+import linesSlice, { LineBreakLevel, LineKind, nonGlobalLinesSelectors } from "./lines";
 
 describe("lines.ts", () => {
   describe("linesSlice", () => {
@@ -7,7 +7,7 @@ describe("lines.ts", () => {
         let state = linesSlice.getInitialState();
         const action1 = linesSlice.actions.addLine({
           id: "foobar",
-          lineKind: "c/story/line/basicLine",
+          lineKind: LineKind.Text,
           tags: [],
           text: "foobar foobar foobar",
         });
@@ -19,7 +19,7 @@ describe("lines.ts", () => {
         });
         const action2 = linesSlice.actions.addLine({
           id: "barfoo",
-          lineKind: "c/story/line/basicLine",
+          lineKind: LineKind.Text,
           tags: ["abc", "wyz"],
           text: "barfoo barfoo barfoo",
           meta: {
@@ -38,12 +38,12 @@ describe("lines.ts", () => {
         const state = [
           linesSlice.actions.addLine({
             id: "foobar",
-            lineKind: "c/story/line/basicLine",
+            lineKind: LineKind.Text,
             text: "foobar foobar foobar",
           }),
           linesSlice.actions.addLine({
             id: "barfoo",
-            lineKind: "c/story/line/basicLine",
+            lineKind: LineKind.Text,
             text: "barfoo barfoo barfoo",
             meta: {
               foobar: "bizzbazz",
