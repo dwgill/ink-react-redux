@@ -1,4 +1,4 @@
-import linesSlice, { LineBreakLevel, LineKind, nonGlobalLinesSelectors } from "./lines";
+import linesSlice, { LineKind, nonGlobalLinesSelectors } from "./lines";
 
 describe("lines.ts", () => {
   describe("linesSlice", () => {
@@ -7,7 +7,7 @@ describe("lines.ts", () => {
         let state = linesSlice.getInitialState();
         const action1 = linesSlice.actions.addLine({
           id: "foobar",
-          lineKind: LineKind.Text,
+          kind: LineKind.Text,
           tags: [],
           text: "foobar foobar foobar",
         });
@@ -19,12 +19,9 @@ describe("lines.ts", () => {
         });
         const action2 = linesSlice.actions.addLine({
           id: "barfoo",
-          lineKind: LineKind.Text,
+          kind: LineKind.Text,
           tags: ["abc", "wyz"],
           text: "barfoo barfoo barfoo",
-          meta: {
-            xyz: "abc",
-          },
         });
         state = linesSlice.reducer(state, action2);
         expect(nonGlobalLinesSelectors.selectById(state, "barfoo")).toEqual({
@@ -38,16 +35,13 @@ describe("lines.ts", () => {
         const state = [
           linesSlice.actions.addLine({
             id: "foobar",
-            lineKind: LineKind.Text,
+            kind: LineKind.Text,
             text: "foobar foobar foobar",
           }),
           linesSlice.actions.addLine({
             id: "barfoo",
-            lineKind: LineKind.Text,
+            kind: LineKind.Text,
             text: "barfoo barfoo barfoo",
-            meta: {
-              foobar: "bizzbazz",
-            },
           }),
         ].reduce(linesSlice.reducer, linesSlice.getInitialState());
 

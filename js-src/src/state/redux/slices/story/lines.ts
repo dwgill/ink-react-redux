@@ -11,84 +11,72 @@ import {
 import type { ReduxState } from "../../store";
 
 export enum LineKind {
-  Text,
-  Empty,
+  Text = "text",
+  Empty = "empty",
+}
+
+export enum LineOrigin {
+  Story = "story",
+  Choice = "choice",
+  NewLine = "new_line",
 }
 
 interface AbstractLine {
   readonly id: string;
-  readonly lineKind: unknown;
+  readonly kind: unknown;
+  readonly origin: unknown;
   readonly index: number;
   readonly meta?: Record<string, any>;
   readonly tags?: string[];
 }
 
 export interface TextualLine extends AbstractLine {
-  readonly lineKind: LineKind.Text;
+  readonly kind: LineKind.Text;
   readonly text: string;
-  readonly persistedChoice?: boolean;
-}
-
-export enum LineBreakLevel {
-  None,
-  LineBreak,
-  ChoiceSelection,
+  readonly origin: LineOrigin.Story | LineOrigin.Choice;
 }
 
 export interface EmptyLine extends AbstractLine {
-  readonly breakLevel: LineBreakLevel;
-  readonly lineKind: LineKind.Empty;
+  readonly kind: LineKind.Empty;
+  readonly origin: LineOrigin.Choice | LineOrigin.NewLine;
 }
 
 export type Line = TextualLine | EmptyLine;
 
 type NewTextualLineValue = SomeOmitSomePartial<
   TextualLine,
-  "index",
-  "meta" | "tags"
+  "index" | "meta",
+  "tags" | "origin"
 >;
 
 type NewEmptyLineValue = SomeOmitSomePartial<
   EmptyLine,
-  "index",
-  "meta" | "tags" | "breakLevel"
+  "index" | "meta",
+  "tags" | "origin"
 >;
 
-export const newBasicLineBreak = (): NewEmptyLineValue => ({
+export const featurelessNewLine = (): NewEmptyLineValue => ({
   id: nanoid(),
-  lineKind: LineKind.Empty,
-  breakLevel: LineBreakLevel.LineBreak,
+  kind: LineKind.Empty,
+  origin: LineOrigin.NewLine,
 });
 
-function lineIsWhitespace(line: Line) {
+function isFeaturelessNewline(line: EmptyLine) {
   if (line == null) return false;
-  return line.lineKind === LineKind.Empty || line.text === "";
-}
-function lineIsMinimalWhitespace(line: Line) {
-  if (line == null) {
-    return false;
-  }
-  if (line.tags?.length) {
-    return false;
-  }
-
-  if (line.lineKind === LineKind.Text && line.text !== "") {
-    return false;
-  }
-
-  if (
-    line.lineKind === LineKind.Empty &&
-    line.breakLevel === LineBreakLevel.ChoiceSelection
-  ) {
-    return false;
-  }
-
-  if (line.meta && Object.keys(line.meta).length > 0) {
-    return false;
-  }
-
+  if (line.origin !== LineOrigin.NewLine) return false;
+  if (line.tags?.length) return false;
+  if (line.meta && Object.values(line.meta).length) return false;
   return true;
 }
+
+function isFeaturelessText(line: TextualLine) {
+  if (line == null) return false;
+  if (line.origin !== LineOrigin.Story) return false;
+  if (line.text !== '') return false;
+  if (line.tags?.length) return false;
+  if (line.meta && Object.values(line.meta).length) return false;
+  return true;
+} 
 
 type NewLineValue = NewTextualLineValue | NewEmptyLineValue;
 
@@ -110,28 +98,22 @@ const linesSlice = createSlice({
       reducer(state, { payload: newLines }: PayloadAction<NewLineValue[]>) {
         if (!newLines?.length) return;
 
-        for (const newLine of newLines) {
-          let newCompleteLine: Line;
-          if (newLine.lineKind === LineKind.Text && newLine.text === "") {
-            continue;
-            // newCompleteLine = {
-            //   id: newLine.id,
-            //   lineKind: LineKind.EMPTY_LINE,
-            //   breakKind: "line_break",
-            //   index: selectors.selectTotal(state),
-            //   meta: newLine.meta ?? {},
-            //   tags: newLine.tags ?? [],
-            // };
-          } else if (newLine.lineKind === LineKind.Text) {
-            newCompleteLine = {
-              ...newLine,
-              text: newLine.text,
+        for (const partialNewLine of newLines) {
+          let newLine: Line;
+          if (partialNewLine.kind === LineKind.Text) {
+            newLine = {
+              ...partialNewLine,
+              text: partialNewLine.text.trim(),
               index: selectors.selectTotal(state),
+              origin: partialNewLine.origin ?? LineOrigin.Story,
             };
-          } else if (newLine.lineKind === LineKind.Empty) {
-            newCompleteLine = {
-              ...newLine,
-              breakLevel: newLine.breakLevel ?? LineBreakLevel.LineBreak,
+            if (isFeaturelessText(newLine)) {
+              continue;
+            }
+          } else if (partialNewLine.kind === LineKind.Empty) {
+            newLine = {
+              ...partialNewLine,
+              origin: partialNewLine.origin ?? LineOrigin.NewLine,
               index: selectors.selectTotal(state),
             };
           } else {
@@ -139,26 +121,30 @@ const linesSlice = createSlice({
           }
 
           const lastLine = getLineByIndex(state, -1);
-          if (lastLine == null) {
-            linesCollectionAdapter.addOne(state, newCompleteLine);
-            continue;
-          }
-
-          const lastLineIsWhiteSpace = lineIsWhitespace(lastLine);
-          const newLineIsMinWhite = lineIsMinimalWhitespace(newCompleteLine);
-          if (lastLineIsWhiteSpace && newLineIsMinWhite) {
-            continue;
-          }
-
           if (
-            lastLineIsWhiteSpace &&
-            lineIsMinimalWhitespace(lastLine) &&
-            newCompleteLine.lineKind === LineKind.Empty &&
-            newCompleteLine.breakLevel === LineBreakLevel.ChoiceSelection
+            lastLine == null ||
+            lastLine.kind !== LineKind.Empty ||
+            newLine.kind !== LineKind.Empty
           ) {
-            linesCollectionAdapter.removeOne(state, lastLine.id);
+            linesCollectionAdapter.addOne(state, newLine);
+            continue;
           }
-          linesCollectionAdapter.addOne(state, newCompleteLine);
+
+          if (isFeaturelessNewline(newLine)) {
+            // This incoming line is an empty line with no distinguishing features
+            // and the predecessor is also an empty line. This new line is redundant,
+            // so let's skip inserting it. 
+            continue;
+          }
+
+          if (isFeaturelessNewline(lastLine)) {
+            // This incoming line is an empty line with some distinguishing features,
+            // but the previous line is an empty line with no distinctions.
+            // So the prev line should be replaced with the new line.
+            linesCollectionAdapter.removeOne(state, lastLine.id); 
+          }
+
+          linesCollectionAdapter.addOne(state, newLine);
         }
       },
       prepare(newLine: DistributiveSomePartial<NewLineValue, "id">) {
@@ -171,18 +157,18 @@ const linesSlice = createSlice({
           {
             ...newLine,
             id: newLine.id ?? nanoid(),
-            ...(newLine.lineKind === LineKind.Text && {
+            ...(newLine.kind === LineKind.Text && {
               text: newLine.text.trim(),
             }),
           },
         ];
 
-        if (newLine.lineKind === LineKind.Text) {
+        if (newLine.kind === LineKind.Text) {
           if (startBreakRE.test(newLine.text)) {
-            toInsert.unshift(newBasicLineBreak());
+            toInsert.unshift(featurelessNewLine());
           }
           if (endBreakRE.test(newLine.text)) {
-            toInsert.push(newBasicLineBreak());
+            toInsert.push(featurelessNewLine());
           }
         }
         return {

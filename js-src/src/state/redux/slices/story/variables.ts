@@ -1,11 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { getStory } from "../../../story/core";
-import storyConfig from "../../../story/inkStoryConfig.json";
+import { defaultConfig } from "../../../story/inkStoryConfig";
 
-const boolVarNames = new Set(storyConfig?.trackedVariables?.bool ?? []);
-const intVarNames = new Set(storyConfig?.trackedVariables?.int ?? []);
+const boolVarNames = new Set(defaultConfig?.trackedVariables?.bool ?? []);
+const intVarNames = new Set(defaultConfig?.trackedVariables?.int ?? []);
 const floatVarNames: Set<string> = new Set(
-  storyConfig?.trackedVariables?.float ?? []
+  defaultConfig?.trackedVariables?.float ?? []
 );
 
 interface VariablesState {

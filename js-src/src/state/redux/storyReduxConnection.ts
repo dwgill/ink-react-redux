@@ -1,10 +1,13 @@
 import { ListenerEffectAPI } from "@reduxjs/toolkit";
 import type { Story } from "inkjs";
-import storyConfig from "../story/inkStoryConfig.json";
+import { defaultConfig } from "../story/inkStoryConfig";
 import { continueStory, selectChoice } from "./actions/storyActions";
 import { getChoice } from "./selectors/story";
 import choicesSlice from "./slices/story/choices";
-import linesSlice, { LineBreakLevel, LineKind } from "./slices/story/lines";
+import linesSlice, {
+  LineKind,
+  LineOrigin,
+} from "./slices/story/lines";
 import miscSlice from "./slices/story/misc";
 import variablesSlice from "./slices/story/variables";
 import type { Dispatch, ReduxState, Store } from "./store";
@@ -23,7 +26,7 @@ function addVariableObservers(story: InstanceType<typeof Story>, store: Store) {
   };
 
   for (const varNamePool of Object.values(
-    storyConfig?.trackedVariables ?? {}
+    defaultConfig?.trackedVariables ?? {}
   )) {
     for (const varName of varNamePool ?? []) {
       story.ObserveVariable(varName, onVariableChange);
@@ -33,7 +36,7 @@ function addVariableObservers(story: InstanceType<typeof Story>, store: Store) {
   return function removeVariableObservers() {
     // Remove observers for any tracked story variables.
     for (const varNamePool of Object.values(
-      storyConfig?.trackedVariables ?? {}
+      defaultConfig?.trackedVariables ?? {}
     )) {
       for (const varName of varNamePool ?? []) {
         story.RemoveVariableObserver(onVariableChange, varName);
@@ -58,7 +61,7 @@ function startStoryReduxMiddlewareListening(
     if (currentText?.trim() || currentTags?.length) {
       listenerApi.dispatch(
         linesSlice.actions.addLine({
-          lineKind: LineKind.Text,
+          kind: LineKind.Text,
           text: currentText ?? "",
           tags: [...(currentTags ?? [])],
         })
@@ -106,21 +109,15 @@ function startStoryReduxMiddlewareListening(
       }
 
       story.ChooseChoiceIndex(choice.index);
-      if (storyConfig?.persistChoiceText && !choice.isInvisibleDefault) {
+      if (defaultConfig?.forceBreakAfterChoices?.enabled) {
         listenerApi.dispatch(
           linesSlice.actions.addLine({
-            lineKind: LineKind.Text,
-            text: choice.text,
-            persistedChoice: true,
+            kind: LineKind.Empty,
+            tags: defaultConfig?.forceBreakAfterChoices?.tags ?? [],
+            origin: LineOrigin.Choice,
           })
         );
       }
-      listenerApi.dispatch(
-        linesSlice.actions.addLine({
-          lineKind: LineKind.Empty,
-          breakLevel: LineBreakLevel.ChoiceSelection,
-        })
-      );
       listenerApi.dispatch(continueStory({ maximally }));
     },
   });
