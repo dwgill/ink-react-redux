@@ -1,17 +1,16 @@
 import { ListenerEffectAPI } from "@reduxjs/toolkit";
 import type { Story } from "inkjs";
+import { simpleSetFromArr } from "../../util/simpleSet";
 import { defaultConfig } from "../story/inkStoryConfig";
 import { continueStory, selectChoice } from "./actions/storyActions";
 import { getChoice } from "./selectors/story";
 import choicesSlice from "./slices/story/choices";
-import linesSlice, {
-  LineKind,
-  LineOrigin,
-} from "./slices/story/lines";
+import linesSlice from "./slices/story/lines";
 import miscSlice from "./slices/story/misc";
 import variablesSlice from "./slices/story/variables";
 import type { Dispatch, ReduxState, Store } from "./store";
 import storyReduxMiddleware from "./storyReduxMiddleware";
+import { LineKind } from "./types";
 
 function addVariableObservers(story: InstanceType<typeof Story>, store: Store) {
   // Add observers for any tracked variables.
@@ -63,7 +62,9 @@ function startStoryReduxMiddlewareListening(
         linesSlice.actions.addLine({
           kind: LineKind.Text,
           text: currentText ?? "",
-          tags: [...(currentTags ?? [])],
+          ...(!!currentTags?.length && {
+            tags: simpleSetFromArr(currentTags.map((t) => t.trim())),
+          }),
         })
       );
     }
@@ -109,15 +110,6 @@ function startStoryReduxMiddlewareListening(
       }
 
       story.ChooseChoiceIndex(choice.index);
-      if (defaultConfig?.forceBreakAfterChoices?.enabled) {
-        listenerApi.dispatch(
-          linesSlice.actions.addLine({
-            kind: LineKind.Empty,
-            tags: defaultConfig?.forceBreakAfterChoices?.tags ?? [],
-            origin: LineOrigin.Choice,
-          })
-        );
-      }
       listenerApi.dispatch(continueStory({ maximally }));
     },
   });

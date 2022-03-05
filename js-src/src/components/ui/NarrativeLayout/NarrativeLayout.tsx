@@ -2,18 +2,18 @@ import React, { ReactNode } from "react";
 import styles from "./NarrativeLayout.module.css";
 
 interface NarrativeLayoutProps {
-  renderNarrativeLines(): ReactNode;
-  renderNarrativeChoices(): ReactNode;
+  lines: ReactNode;
+  choices: ReactNode;
 }
 export default function NarrativeLayout({
-  renderNarrativeChoices,
-  renderNarrativeLines,
+  lines,
+  choices,
 }: NarrativeLayoutProps) {
   return (
     <div className={styles.container}>
-      {renderNarrativeLines()}
+      {lines}
       <div />
-      {renderNarrativeChoices()}
+      {choices}
     </div>
   );
 }

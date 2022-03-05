@@ -5,13 +5,9 @@ export interface InkStoryConfig {
     int?: string[];
     float?: string[];
   };
-  forceBreakAfterChoices?: null | {
-    enabled: boolean;
-    tags?: string[];
-  };
   lineGrouping?: null | {
-    delimiterTags: string[];
-    excludedTags: string[];
+    groupTags: string[];
+    grouplessTags: string[];
   };
 }
 
@@ -22,12 +18,8 @@ export const defaultConfig: InkStoryConfig = {
     int: [],
     float: [],
   },
-  forceBreakAfterChoices: {
-    enabled: false,
-    tags: [],
-  },
   lineGrouping: {
-    delimiterTags: ['foobar'],
-    excludedTags: [],
+    groupTags: ['group'],
+    grouplessTags: ['nogroup'],
   },
 };

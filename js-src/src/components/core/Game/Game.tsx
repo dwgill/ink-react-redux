@@ -1,22 +1,22 @@
 import React, { useEffect } from "react";
-import { Provider } from "react-redux";
+import { useDispatch } from "react-redux";
 import { continueStory } from "../../../state/redux/actions/storyActions";
-import { getStore } from "../../../state/redux/store";
-import { StoryProvider } from "../../../state/story/storyContext";
-import App from "../../ui/App";
+import { useSelector } from "../../../state/redux/store";
 import Narrative from "../Narrative";
 
 export default function Game() {
+  const unstarted = useSelector((state) => {
+    return (
+      state.story.misc.canContinue &&
+      state.story.lines.lineEntities.ids.length === 0 &&
+      state.story.choices.ids.length === 0
+    );
+  });
+  const dispatch = useDispatch();
   useEffect(() => {
-    getStore().dispatch(continueStory());
-  }, []);
-  return (
-    <StoryProvider>
-      <Provider store={getStore()}>
-        <App>
-          <Narrative />
-        </App>
-      </Provider>
-    </StoryProvider>
-  );
+    if (unstarted) {
+      dispatch(continueStory({ maximally: true }));
+    }
+  }, [dispatch, unstarted]);
+  return <Narrative />;
 }

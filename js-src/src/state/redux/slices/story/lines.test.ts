@@ -1,4 +1,7 @@
-import linesSlice, { LineKind, nonGlobalLinesSelectors } from "./lines";
+import { simpleSetFromArr as set } from "../../../../util/simpleSet";
+import { LineKind } from "../../types";
+import linesSlice, { nonGlobalLinesSelectors } from "./lines";
+
 
 describe("lines.ts", () => {
   describe("linesSlice", () => {
@@ -8,7 +11,7 @@ describe("lines.ts", () => {
         const action1 = linesSlice.actions.addLine({
           id: "foobar",
           kind: LineKind.Text,
-          tags: [],
+          tags: {},
           text: "foobar foobar foobar",
         });
         state = linesSlice.reducer(state, action1);
@@ -20,7 +23,7 @@ describe("lines.ts", () => {
         const action2 = linesSlice.actions.addLine({
           id: "barfoo",
           kind: LineKind.Text,
-          tags: ["abc", "wyz"],
+          tags: set(["abc", "wyz"]),
           text: "barfoo barfoo barfoo",
         });
         state = linesSlice.reducer(state, action2);

@@ -1,16 +1,15 @@
-import React, { ReactNode } from 'react';
-import 'beercss';
-import styles from './App.module.css';
+import React, { ReactNode } from "react";
+import "beercss";
+import styles from "./App.module.css";
+import { Provider } from "react-redux";
+import { getStore } from "../../../state/redux/store";
+import Game from "../../core/Game";
 
-interface AppProps {
-  children: ReactNode;
-}
-
-function App({ children }: AppProps) {
+function App() {
   return (
-    <div className={styles.app}>
-      {children}
-    </div>
+    <Provider store={getStore()}>
+      <Game />
+    </Provider>
   );
 }
 
