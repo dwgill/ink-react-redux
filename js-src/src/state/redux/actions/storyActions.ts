@@ -12,16 +12,31 @@ export const continueStory = createAction(
   })
 );
 
-interface SelectChoiceArgs {
+interface SelectChoiceIdArgs {
   choiceId: EntityId;
+  maximally?: boolean;
+}
+interface SelectChoiceIndexArgs {
+  choiceIndex: number;
   maximally?: boolean;
 }
 export const selectChoice = createAction(
   "story/actions/selectChoice",
-  ({ choiceId, maximally = false }: SelectChoiceArgs) => ({
-    payload: {
-      choiceId,
-      maximally,
-    },
-  })
+  (args: SelectChoiceIdArgs | SelectChoiceIndexArgs) => {
+    if ("choiceId" in args) {
+      return {
+        payload: {
+          choiceId: args.choiceId,
+          maximally: args.maximally ?? false,
+        },
+      };
+    }
+
+    return {
+      payload: {
+        choiceIndex: args.choiceIndex,
+        maximally: args.maximally ?? false,
+      },
+    };
+  }
 );

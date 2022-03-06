@@ -16,6 +16,8 @@ export default function groupEntityIds(
   entityIds: EntityId[],
   groupDefinitions: number[]
 ) {
+  if (entityIds.length === 0) return []
+
   let groupedIds: (EntityId | EntityId[])[] = [];
 
   // Need to handle the scenario where the first entry is negative.

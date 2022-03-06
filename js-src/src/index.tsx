@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import Game from "./components/core/Game";
 import App from "./components/ui/App";
 import reportWebVitals from "./reportWebVitals";
 

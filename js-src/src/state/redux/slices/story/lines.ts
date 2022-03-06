@@ -43,7 +43,7 @@ const linesCollectionAdapter = createEntityAdapter<Line>({
 
 const initialState = {
   lineEntities: linesCollectionAdapter.getInitialState(),
-  lineGroupings: [] as number[],
+  lineGroupDefinitions: [] as number[],
 };
 
 const lineSelectors = linesCollectionAdapter.getSelectors(
@@ -82,15 +82,15 @@ const linesSlice = createSlice({
         }
 
         const totalLinesNum = lineSelectors.selectTotal(state);
-        if (state.lineGroupings.length > totalLinesNum) {
-          state.lineGroupings = lineSelectors
+        if (state.lineGroupDefinitions.length > totalLinesNum) {
+          state.lineGroupDefinitions = lineSelectors
             .selectAll(state)
             .map(evaluateLineGroupingNumber);
         }
 
-        if (state.lineGroupings.length < totalLinesNum) {
-          for (let i = state.lineGroupings.length; i < totalLinesNum; i++) {
-            state.lineGroupings.push(
+        if (state.lineGroupDefinitions.length < totalLinesNum) {
+          for (let i = state.lineGroupDefinitions.length; i < totalLinesNum; i++) {
+            state.lineGroupDefinitions.push(
               evaluateLineGroupingNumber(getLineByIndex(state, i))
             );
           }

@@ -100,16 +100,22 @@ function startStoryReduxMiddlewareListening(
 
   const stopListeningSelectChoice = storyReduxMiddleware.startListening({
     actionCreator: selectChoice,
-    effect({ payload: { choiceId, maximally } }, listenerApi) {
-      const choice = getChoice(listenerApi.getState(), choiceId);
-      if (choice == null) {
-        if (process.env.NODE_ENV === "development") {
-          alert(`Tried to select non-existant choice ${choiceId}.`);
+    effect({ payload: { choiceId, maximally, choiceIndex } }, listenerApi) {
+      if (choiceIndex) {
+        story.ChooseChoiceIndex(choiceIndex);
+      } else if (choiceId != null) {
+        const choice = getChoice(listenerApi.getState(), choiceId);
+        if (choice == null) {
+          if (process.env.NODE_ENV === "development") {
+            alert(`Tried to select non-existant choice ${choiceId}.`);
+          }
+          return;
         }
+        story.ChooseChoiceIndex(choice.index);
+      } else {
         return;
       }
 
-      story.ChooseChoiceIndex(choice.index);
       listenerApi.dispatch(continueStory({ maximally }));
     },
   });
